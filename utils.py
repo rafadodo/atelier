@@ -36,7 +36,7 @@ def plot_modes(modes):
 
 def animate_modes(
     modes,
-    rotational_step=0.2, nframes=10,
+    rot_step=0.2, nframes=10,
     interval=200, gif_name='modes_gif'
 ):
     """Save gif animation of the modes given by
@@ -54,28 +54,23 @@ def animate_modes(
     ax.set(xlim=[-1,1], ylim=[0, n_modes+1])
     ax.grid()
     ax.set_aspect('equal')
-    line1, = ax.plot([], [], lw=2, marker='o')
-    line2, = ax.plot([], [], lw=2, marker='o')
-    line3, = ax.plot([], [], lw=2, marker='o')
-    line4, = ax.plot([], [], lw=2, marker='o')
+    lines = np.empty(n_modes, dtype=object)
+    for mode in range(n_modes):
+        lines[mode], = ax.plot([], [], lw=2, marker='o')
 
     def init():
-        line1.set_data([], [])
-        line2.set_data([], [])
-        line3.set_data([], [])
-        line4.set_data([], [])
-        return line1, line2, line3, line4
+        for mode in range(n_modes):
+            lines[mode].set_data([], [])
+        return lines
 
     def animate(i):
-        y = vertical_coords
-        line1.set_data(modes_plot[:,0]*np.sin(rotational_step*np.pi*i), y)
-        line2.set_data(modes_plot[:,1]*np.sin(rotational_step*np.pi*i), y)
-        line3.set_data(modes_plot[:,2]*np.sin(rotational_step*np.pi*i), y)
-        line4.set_data(modes_plot[:,3]*np.sin(rotational_step*np.pi*i), y)
-        return line1, line2, line3, line4
+        for mode in range(n_modes):
+            lines[mode].set_data(modes_plot[:,mode]*np.sin(rot_step*np.pi*i),
+                                 vertical_coords)
+        return lines
 
     anim = FuncAnimation(fig, animate, init_func=init,
-                                   frames=nframes, interval=interval, blit=True)
+                         frames=nframes, interval=interval, blit=True)
     anim.save('{}.gif'.format(gif_name), writer='imagemagick')
     return ax
         
