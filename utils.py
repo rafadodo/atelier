@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def printMatrix(a):
     for row in a:
@@ -33,3 +34,11 @@ def get_max_off_diagonal(A):
     np.fill_diagonal(mask, 0)
     max_off_diagonal = A[mask].max()
     return max_off_diagonal
+
+def plot_MAC(MAC, color_map, text_color):
+    fig, ax = plt.subplots()
+    cax = ax.matshow(MAC, cmap=color_map)
+    fig.colorbar(cax)
+    for (i, j), z in np.ndenumerate(MAC):
+        ax.text(j, i, '{:.2f}'.format(z), ha='center', va='center', color=text_color)
+    return ax
