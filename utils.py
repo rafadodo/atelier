@@ -78,8 +78,8 @@ def get_MAC(mode_A, mode_B):
     """Obtain the MAC for the modes defined by
     column vectors A and B.
     """
-    MAC = (mode_A.conj().T @ mode_B)**2 / \
-          ((mode_A.conj().T @ mode_A) * (mode_B.conj().T @ mode_B))
+    MAC = abs(mode_A.T @ mode_B.conj())**2 / \
+          (abs(mode_A.T @ mode_A.conj()) * abs(mode_B.T @ mode_B.conj()))
     return MAC
     
 def get_MAC_matrix(modes_A, modes_B):
