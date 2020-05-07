@@ -112,3 +112,26 @@ def plot_MAC(MAC, color_map, text_color):
     for (i, j), z in np.ndenumerate(MAC):
         ax.text(j, i, '{:.2f}'.format(z), ha='center', va='center', color=text_color)
     return ax
+
+def get_efdd_segment(s_vec, peak_idx, mac_th):
+    """Return the frequency indexes around peak_idx where the psd
+    matrix having s_vec as its singular vector matrix can be
+    considered as the psd of the 1DOF system, corresponding to the
+    mode shape that the first singular vector takes at peak_idx.
+
+    A MAC above the threshold mac_th is used as a criterion."""
+
+    sdof_mode = u[peak_idx, :, 0]
+    lower_idx = peak_idx
+    mac = 1
+    while (mac>mac_th) & (lower_idx>0):
+        lower_idx -= 1
+        mac = get_MAC(sdof_mode, u[lower_idx, :, 0])
+
+    upper_idx = peak_idx
+    mac = 1
+    while (mac>mac_th) & (upper_idx<u.shape[0]//2):
+        upper_idx += 1
+        mac = get_MAC(sdof_mode, u[upper_idx, :, 0])
+
+    return lower_idx, upper_idx
