@@ -121,17 +121,17 @@ def get_efdd_segment(s_vec, peak_idx, mac_th):
 
     A MAC above the threshold mac_th is used as a criterion."""
 
-    sdof_mode = u[peak_idx, :, 0]
+    sdof_mode = s_vec[peak_idx, :, 0]
     lower_idx = peak_idx
     mac = 1
     while (mac>mac_th) & (lower_idx>0):
         lower_idx -= 1
-        mac = get_MAC(sdof_mode, u[lower_idx, :, 0])
+        mac = get_MAC(sdof_mode, s_vec[lower_idx, :, 0])
 
     upper_idx = peak_idx
     mac = 1
-    while (mac>mac_th) & (upper_idx<u.shape[0]//2):
+    while (mac>mac_th) & (upper_idx<s_vec.shape[0]//2):
         upper_idx += 1
-        mac = get_MAC(sdof_mode, u[upper_idx, :, 0])
+        mac = get_MAC(sdof_mode, s_vec[upper_idx, :, 0])
 
     return lower_idx, upper_idx
