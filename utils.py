@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from scipy import signal
 
 def printMatrix(a):
     """Print the values of the input array as a matrix."""
@@ -135,3 +136,40 @@ def get_efdd_segment(s_vec, peak_idx, mac_th):
         mac = get_MAC(sdof_mode, s_vec[upper_idx, :, 0])
 
     return lower_idx, upper_idx
+
+def get_damp_from_decay(decay):
+    """Calculate the damping of a decaying signal
+    from its logarithmic decrement, obtained by
+    least squares."""
+
+    peak_ind = np.array([m for m in signal.argrelmax(abs(decay), order=1)]).flatten()
+    log_peak_ratios = np.zeros(len(peak_ind)-1)
+    for i in range(len(peak_ind)-1):
+        log_peak_ratios[i] = 2*np.log(abs(decay[peak_ind[0]] / decay[peak_ind[i+1]]))
+    peak_nums = np.linspace(1, len(log_peak_ratios), len(log_peak_ratios))
+
+    A = np.vstack([peak_nums, np.ones(len(peak_nums))]).T
+    b = log_peak_ratios
+    plt.scatter(A[:,0], b)
+
+    m, c = np.linalg.lstsq(A, b, rcond=None)[0]
+    resid = np.linalg.lstsq(A, b, rcond=None)[1][0]
+    R2 = 1 - resid / (b.size * b.var())
+    plt.plot(peak_nums, c + m*peak_nums)
+
+    damp = m/np.sqrt(m**2 + 4*np.pi**2)
+    return damp, R2
+
+def get_freq_from_signal(timestamps, values):
+    """Calculate the frequency of a signal by
+    averaging the times between zero crossings."""
+
+    zero_cross_idx = np.where(np.diff(np.sign(values.real)))[0]
+    freqs = np.zeros(len(zero_cross_idx)-1)
+    for i in range(len(zero_cross_idx)-1):
+        idx = zero_cross_idx[i]
+        next_idx = zero_cross_idx[i+1]
+        freqs[i] = 1/2/(timestamps[next_idx]-timestamps[idx])
+
+    freq = np.mean(freqs)
+    return freq
