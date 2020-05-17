@@ -165,11 +165,17 @@ def get_freq_from_signal(timestamps, values):
     averaging the times between zero crossings."""
 
     zero_cross_idx = np.where(np.diff(np.sign(values.real)))[0]
-    freqs = np.zeros(len(zero_cross_idx)-1)
-    for i in range(len(zero_cross_idx)-1):
-        idx = zero_cross_idx[i]
-        next_idx = zero_cross_idx[i+1]
-        freqs[i] = 1/2/(timestamps[next_idx]-timestamps[idx])
+    crossing_nums = np.arange(len(zero_cross_idx))+1
+    time_intervals_doubled = 2*timestamps[zero_cross_idx]
 
-    freq = np.mean(freqs)
+    A = np.vstack([time_intervals_doubled, np.ones(len(time_intervals_doubled))]).T
+    b = crossing_nums
+    plt.scatter(A[:,0], b)
+
+    m, c = np.linalg.lstsq(A, b, rcond=None)[0]
+    resid = np.linalg.lstsq(A, b, rcond=None)[1][0]
+    R2 = 1 - resid / (b.size * b.var())
+    plt.plot(time_intervals_doubled, c + m*time_intervals_doubled)
+
+    freq = m
     return freq
