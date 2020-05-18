@@ -170,12 +170,10 @@ def get_freq_from_signal(timestamps, values):
 
     A = np.vstack([time_intervals_doubled, np.ones(len(time_intervals_doubled))]).T
     b = crossing_nums
-    plt.scatter(A[:,0], b)
 
     m, c = np.linalg.lstsq(A, b, rcond=None)[0]
     resid = np.linalg.lstsq(A, b, rcond=None)[1][0]
     R2 = 1 - resid / (b.size * b.var())
-    plt.plot(time_intervals_doubled, c + m*time_intervals_doubled)
 
     freq = m
     return freq
