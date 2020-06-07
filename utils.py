@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy import signal
+import pandas as pd
 
 def printMatrix(a):
     """Print the values of the input array as a matrix."""
@@ -9,6 +10,19 @@ def printMatrix(a):
         for col in row:
             print("{:.2E}".format(col), end=" ")
         print("")
+
+def print_modes_dataframe(data, headers, decimals):
+    """Prints the columns of the "data" matrix, the first of which
+    is expected to contain mode numbers, as a dataframe, with
+    the precision given by "decimals".
+    Column names are given by "headers".
+    """
+    format_str = '{:.' + str(decimals) + 'f}'
+    pd.options.display.float_format = format_str.format
+    df = pd.DataFrame(data=data, columns=headers)
+    df.set_index(headers[0])
+    df[headers[0]] = df[headers[0]].map('{:.0f}'.format)
+    return df
 
 def plot_modes(modes):
     """Plot the columns of the input array as the
