@@ -191,3 +191,25 @@ def get_freq_from_signal(timestamps, values):
 
     freq = m
     return freq
+
+def curve_fit_psd_peak(f, psd, indexes, f_hat):
+    """Fits the segment of the psd curve between the given indexes to a 1DOF PSD,
+    considering it as the square of a 1DOF transmisibility, |H(f)|^2.
+    The frequencies of the given psd are contained in f, while the frequencies for
+    the desired approximation are given in f_hat.
+    
+    Returns the mode frequency f_n, the mode damping xi_n, and the fitted curve psd_hat.
+    """
+    w = 2*np.pi*f[indexes[0]:indexes[1]]
+    w_hat = 2*np.pi*f_hat
+    B = psd[indexes[0]:indexes[1]]
+    A = np.vstack((w**4, -B*w**4, -B*w**2)).T    
+    x = np.linalg.lstsq(A, B, rcond=None)[0]
+    
+    w_n = 1/x[1]**0.25
+    f_n = w_n/2/np.pi
+    c = np.sqrt(x[0]*w_n**4)
+    xi_n = np.sqrt(abs(x[2]*w_n**2 + 2)/4)
+    psd_hat = c**2 * w_hat**4 / \
+              ((w_n**2 - w_hat**2)**2 + 4*xi_n**2 * w_n**2 * w_hat**2)
+    return f_n, xi_n, psd_hat
