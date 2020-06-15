@@ -4,8 +4,36 @@ from scipy import signal
 
 import mac
 
+def get_peak_picking_modes(psd, angle_th, mode_idxes):
+    """Obtains the mode shapes from the given PSD matrix and the mode indexes,
+    using the given angle threshold for the phase difference.
+    The rows and columns of the PSD matrix shall correspond to the frequencies
+    and DOFs respectively.
+    """
+    total_dof = psd.shape[1]
+    total_modes = len(mode_idxes)
+    modes_pp = np.zeros((total_dof, total_modes))
+
+    for mode in range(total_modes):
+        idx = mode_idxes[mode]
+        for dof in range(total_dof):
+            cross_power = psd[idx, dof] * np.conj(psd[idx, 0])
+            ang = abs(np.angle(cross_power, deg=True))
+            sign = 0
+            if 0 <= ang <= angle_th:
+                sign = 1
+            elif (180 - angle_th) <= ang <= 180:
+                sign = -1
+            modes_pp[dof, mode] = sign * abs(psd[idx, dof]) / abs(psd[idx, 0])
+
+    # Normalization
+    for col in range(modes_pp.shape[1]):
+        modes_pp[:,col] = modes_pp[:,col]/max(abs(modes_pp[:,col]))
+
+    return modes_pp
+
 def get_efdd_segment(s_vec, peak_idx, mac_th):
-    """Return the frequency indexes around peak_idx where the psd
+    """Returns the frequency indexes around peak_idx where the psd
     matrix having s_vec as its singular vector matrix can be
     considered as the psd of the 1DOF system, corresponding to the
     mode shape that the first singular vector takes at peak_idx.
@@ -28,7 +56,7 @@ def get_efdd_segment(s_vec, peak_idx, mac_th):
     return lower_idx, upper_idx
 
 def get_damp_from_decay(decay):
-    """Calculate the damping of a decaying signal
+    """Calculates the damping of a decaying signal
     from its logarithmic decrement, obtained by
     least squares."""
 
@@ -51,7 +79,7 @@ def get_damp_from_decay(decay):
     return damp, R2
 
 def get_freq_from_signal(timestamps, values):
-    """Calculate the frequency of a signal by
+    """Calculates the frequency of a signal by
     averaging the times between zero crossings."""
 
     zero_cross_idx = np.where(np.diff(np.sign(values.real)))[0]
