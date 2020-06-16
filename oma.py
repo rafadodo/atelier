@@ -96,6 +96,17 @@ def get_freq_from_signal(timestamps, values):
     freq = m
     return freq
 
+def get_mean_modeshape_efdd(segment_idxes, peak_idx, s_vectors):
+    peak_modeshape = s_vectors[peak_idx, :, 0]
+    modeshapes = s_vectors[segment_idxes[0]:segment_idxes[1], :, 0]
+
+    mac_values = np.zeros(len(modeshapes))
+    for idx in range(len(modeshapes)):
+        mac_values[idx] = mac.get_MAC(peak_modeshape, modeshapes[idx, :])
+
+    modeshape_efdd = np.sum((modeshapes.T * mac_values).T, axis=0) / np.sum(mac_values)
+    return modeshape_efdd
+
 def curve_fit_psd_peak(f, psd, indexes, f_hat):
     """Fits the segment of the psd curve between the given indexes to a 1DOF PSD,
     considering it as the square of a 1DOF transmisibility, |H(f)|^2.
