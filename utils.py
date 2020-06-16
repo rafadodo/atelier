@@ -4,7 +4,7 @@ from matplotlib.animation import FuncAnimation
 import pandas as pd
 
 def printMatrix(a):
-    """Print the values of the input array as a matrix."""
+    """Prints the values of the input array as a matrix."""
     for row in a:
         for col in row:
             print("{:.2E}".format(col), end=" ")
@@ -24,7 +24,7 @@ def print_modes_dataframe(data, headers, decimals):
     return df
 
 def plot_modes(modes):
-    """Plot the columns of the input array as the
+    """Plots the columns of the input array as the
     transverse modes of a building.
     """
     n_dof = modes.shape[0]
@@ -53,7 +53,7 @@ def animate_modes(
     rot_step=0.2, nframes=10,
     interval=200, gif_name='modes_gif'
 ):
-    """Save gif animation of the modes given by
+    """Saves gif animation of the modes given by
     the columns of the input array.
     """
     n_dof = modes.shape[0]
@@ -87,3 +87,22 @@ def animate_modes(
                          frames=nframes, interval=interval, blit=True)
     anim.save('{}.gif'.format(gif_name), writer='imagemagick')
     return ax
+
+def plot_modes_complexity(modes):
+    """Plots the complex components of the modes matrix in
+    polar coordinates. Rows and columns are read as DOFs and
+    modes respectively.
+    """
+    total_dofs = modes.shape[0]
+    total_modes = modes.shape[1]
+
+    fix, ax = plt.subplots(1, total_modes, subplot_kw=dict(polar=True), figsize=(12,20))
+    plt.tight_layout()
+    for mode in range(total_modes):
+        ax[mode].set_title('Modo {}'.format(mode+1), y=1.15)
+        ax[mode].yaxis.set_ticks([0])
+        for dof in range(total_dofs):
+            ax[mode].plot([0, np.angle(modes[dof, mode])],
+                     [0,np.abs(modes[dof, mode])],
+                     marker='o')
+    return None
