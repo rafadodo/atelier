@@ -29,7 +29,7 @@ def orthogonal_polynomials(frf, omega, weights, order):
                         polynomial coefficients.
     """
     
-    P = np.zeros((len(omega), order))
+    P = np.zeros((len(omega), order+1), dtype=complex)
     Coeff = np.zeros((order+1, order+2))
     
     if weights=="ones":
@@ -37,30 +37,29 @@ def orthogonal_polynomials(frf, omega, weights, order):
     elif weights=="frf":
     	q = (np.abs(frf))**2    # weighting vuales for theta matrix
     else:
-    	raise Exception('invalid weights.')
+        raise Exception('Invalid weights.')
 
     Coeff[0,1] = 1 / np.sqrt(2 * np.sum(q))
-    
-    R = np.zeros(len(omega), order+2)
+
+    R = np.zeros((len(omega), order+2))
     R[:, 0] = np.zeros(len(omega))
     R[:, 1] = 1 / np.sqrt(2 * np.sum(q))
 
     for k in range(2, order+1):
         V_km1 = 2*np.sum(omega * R[:, k-1] * R[:, k-2] * q)
-        S_k = omega * R[:, k+1] - V_km1 * R[:, k-2]
+        S_k = omega * R[:, k-1] - V_km1 * R[:, k-2]
         D_k = np.sqrt(2 * np.sum(S_k**2 * q))
         
         R[:, k] = S_k / D_k
         Coeff[:, k] = -V_km1 * Coeff[:, k-2] 
-        Coeff[1:k-1, k] += Coeff[1:k-1, k-1] # copyyy
+        Coeff[1:k-1, k] += Coeff[1:k-1, k-1]
         Coeff[:, k] = Coeff[:, k] / D_k
-        
-    
-    j_k =  np.zeros(order+1)
+
+    j_k =  np.zeros((order+1,1), dtype=complex)
     for k in range(order+1):
         P[:, k] = 1j**k * R[:, k+1]
         j_k[k] = 1j**k
-        
+
     Coeff = (j_k @ j_k.T) @ Coeff
         
     return P, Coeff
