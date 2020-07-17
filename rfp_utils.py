@@ -74,13 +74,20 @@ def rfp(frf, omega, n_dof):
     (1982).
 
     Arguments:
-        FRF (complex array): Frequency Response Function vector
-        omega (array): Angular velocity range (rad/s)
-        n_dof (int): Number of degrees of freedom
+        frf (numpy complex array):
+            - Frequency Response Function vector (receptance).
+        omega (numpy array):
+            - Angular velocity range (rad/s)
+        n_dof (int):
+            - Number of degrees of freedom (modes) to consider for the
+            estimation
 
     Returns:
-        alpha (complex array) = FRF estimation (receptance).
-        modal_par = Modal Parameters [freq,damp,Ci,Oi]:
+        alpha (numpy complex array):
+            - Estimated receptance FRF in the given frequency range.
+        modal_params (array list):
+            - Modal parameter  for the estimated FRF Modal parameter list:
+                [freq_n, xi_n, modal_mag_n, modal_ang_n]
     """
 
     omega_norm = omega / np.max(omega) # omega normalization
@@ -115,7 +122,7 @@ def rfp(frf, omega, n_dof):
     Residuos = res[::2] * np.max(omega)
     Polos = pol[::2] * np.max(omega)
 
-    omega_n = np.abs(Polos) # Natural frequencies (rad/sec)
+    freq_n = np.abs(Polos)/2/np.pi # Natural frequencies (rad/sec)
     xi_n = np.real(Polos) / np.abs(Polos) # Damping ratios
     Ai = -2 * (np.real(Residuos) * np.real(Polos) + \
                np.imag(Residuos) * np.imag(Polos))
@@ -124,6 +131,32 @@ def rfp(frf, omega, n_dof):
     modal_mag_n = np.abs(modal_const) # Modal constant magnitude
     modal_ang_n = np.angle(modal_const) # Modal constant phase
 
-    modal_params = [omega_n, xi_n, modal_mag_n, modal_ang_n] # Modal Parameters
+    modal_params = [freq_n, xi_n, modal_mag_n, modal_ang_n] # Modal Parameters
 
     return modal_params, alpha
+
+def grfp(frf, omega, n_dof):
+    """Computes estimates for the modal parameters of the given FRF, in the
+    frequency range given by omega, modeling it as an n_dof degrees of freedom
+    system, and following the GRFP method as described by Richardson et. al
+    (1986).
+
+    Arguments:
+        - frf (numpy complex array):
+            - Frequency Response Function matrix. Each column contains the FRF
+            for a particular DOF, with all of them corresponding the reference or
+            input DOF.
+        - omega (numpy array):
+            - Angular velocity range (rad/s)
+        - n_dof (int):
+            - Number of degrees of freedom
+
+    Returns:
+        - alpha (numpy complex array):
+             - Estimated receptance FRF in the given frequency range.
+        - modal_params (numpy array list):
+            - Modal parameters for the estimated FRF Modal parameter list:
+                [freq_n, xi_n, modal_mag_n, modal_ang_n]
+    """
+
+    return None
