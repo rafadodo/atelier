@@ -14,7 +14,7 @@ from scipy import signal
 def orthogonal_polynomials(frf, omega, weights, order):
     """Compute the Forsythe orthogonal polynomials that approximate the
     frequency response function FRF over the frequency range omega, to be used
-    in the RFP method as described by Richardson et. al (1982).
+    in the RFP method as described by Richardson and Formenti [1].
     
     Arguments:
         FRF (array): Frequency Response Function vector ()
@@ -28,6 +28,10 @@ def orthogonal_polynomials(frf, omega, weights, order):
                     frequencies.
         Coeff (array): Matrix that converts Forsythe coefficients to standard
                         polynomial coefficients.
+
+    [1] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
+    response measurements using rational fraction polynomials", 1st IMAC Conference,
+    Orlando, FL, 1986.
     """
     
     P = np.zeros((len(omega), order+1), dtype=complex)
@@ -53,9 +57,8 @@ def orthogonal_polynomials(frf, omega, weights, order):
         D_k = np.sqrt(2 * np.sum(S_k**2 * q))
         
         R[:, k] = S_k / D_k
-        Coeff_ext[:, k] = -V_km1 * Coeff_ext[:, k-2]
-        Coeff_ext[1:k, k] += Coeff_ext[:k-1, k-1]
-        Coeff_ext[:, k] = Coeff_ext[:, k] / D_k
+        Coeff_ext[:, k] = (1/D_k) *(-V_km1 * Coeff_ext[:, k-2] + \
+                          np.concatenate([[0], Coeff_ext[:-1, k-1]]))
 
     j_k =  np.zeros((order+1,1), dtype=complex)
     for k in range(order+1):
@@ -70,8 +73,7 @@ def orthogonal_polynomials(frf, omega, weights, order):
 def rfp(frf, omega, n_dof):
     """Computes estimates for the modal parameters of the given FRF, in the
     frequency range given by omega, modeling it as an n_dof degrees of freedom
-    system, and following the RFP method as described by Richardson et. al
-    (1982).
+    system, and following the RFP method as described by Richardson and Formenti [1].
 
     Arguments:
         frf (numpy complex array):
@@ -88,42 +90,45 @@ def rfp(frf, omega, n_dof):
         modal_params (array list):
             - Modal parameter  for the estimated FRF Modal parameter list:
                 [freq_n, xi_n, modal_mag_n, modal_ang_n]
+
+    [1] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
+    response measurements using rational fraction polynomials", 1st IMAC Conference,
+    Orlando, FL, 1986.
     """
 
     omega_norm = omega / np.max(omega) # omega normalization
     m = 2*n_dof - 1 # number of polynomial terms in numerator
-    n = 2*n_dof   # number of polynomial terms in denominator
+    n = 2*n_dof # number of polynomial terms in denominator
+    d = np.zeros(n+1) # Orthogonal denominator polynomial coefficients
 
     # computation of Forsythe orthogonal polynomials
-    Phi, Coeff_B = orthogonal_polynomials(frf, omega_norm, 'ones', m)
-    Theta, Coeff_A = orthogonal_polynomials(frf, omega_norm, 'frf', n)
+    Phi, Coeff_A = orthogonal_polynomials(frf, omega_norm, 'ones', m)
+    Theta, Coeff_B = orthogonal_polynomials(frf, omega_norm, 'frf', n)
 
     T = np.diag(frf) @ Theta[:, :-1]
     W = frf * Theta[:, -1]
     X = -2 * np.real(Phi.T.conj() @ T)
     H = 2 * np.real(Phi.T.conj() @ W)
 
-    d_pre = -np.linalg.inv(np.eye(X.shape[1]) - X.T @ X) @ X.T @ H
-    c = H - X @ d_pre # Orthogonal numerator polynomial coefficients
-    d = np.zeros(len(d_pre) + 1)
-    d[:-1] = d_pre # Orthogonal denominator polynomial coefficients
+    d[:-1] = -np.linalg.inv(np.eye(X.shape[1]) - X.T @ X) @ X.T @ H
     d[-1] = 1
+    c = H - X @ d[:-1] # Orthogonal numerator polynomial coefficients
 
     # calculation of the estimated FRF (alpha)
     numer = Phi @ c
     denom = Theta @ d
     alpha = numer / denom
 
-    b = np.flipud(Coeff_B @ c) # Standard polynomial numerator coefficients
-    a = np.flipud(Coeff_A @ d) # Standard polynomial denominator coefficients
+    a = np.flipud(Coeff_A @ c) # Standard polynomial numerator coefficients
+    b = np.flipud(Coeff_B @ d) # Standard polynomial denominator coefficients
 
     # Calculation of the poles and residues
-    res, pol, _ = signal.residue(b, a)
+    res, pol, _ = signal.residue(a, b)
     Residuos = res[::2] * np.max(omega)
     Polos = pol[::2] * np.max(omega)
 
     freq_n = np.abs(Polos)/2/np.pi # Natural frequencies (rad/sec)
-    xi_n = np.real(Polos) / np.abs(Polos) # Damping ratios
+    xi_n = -np.real(Polos) / np.abs(Polos) # Damping ratios
     Ai = -2 * (np.real(Residuos) * np.real(Polos) + \
                np.imag(Residuos) * np.imag(Polos))
     Bi = 2 * np.real(Residuos)
