@@ -23,21 +23,28 @@ def print_modes_dataframe(data, headers, decimals):
     df[headers[0]] = df[headers[0]].map('{:.0f}'.format)
     return df
 
-def plot_modes(modes):
+def plot_column_modes(modes):
     """Plots the columns of the input array as the
-    transverse modes of a building.
+    transverse modes of a column-like structure.
     """
     n_dof = modes.shape[0]
     n_modes = modes.shape[1]
-    horizontal_coords = np.zeros(n_dof + 1)
-    vertical_coords = np.linspace(0, n_modes, n_modes+1)
+    vertical_coords = np.linspace(0, n_dof, n_dof+1)
     modes_plot = np.zeros((n_dof + 1, n_modes))
-    modes_plot[1:, :] = modes
+    for mode in range(n_modes):
+        modes_plot[1:, mode] = np.real(modes[:,mode]) / max(abs(modes[:,mode]))
 
     fig, ax = plt.subplots()
-    ax.set(xlim=[-1,3], ylim=[0, n_modes+1])
+    ax.set_title('Formas Modales')
+    ax.set(xlim=[-1, 3], ylim=[0, n_modes+1])
+    ax.set_ylabel('DOFs')
+    ax.set_xticklabels([])
+    n_ticks = len(ax.get_yticks())
+    if n_ticks>(n_dof+2):
+        ax.set_yticks(ax.get_yticks()[::2][1:])
     ax.grid()
     ax.set_aspect('equal')
+
     ax.plot(np.zeros(n_dof + 1), vertical_coords, color='k', marker='o')
     for col in range(n_modes):
         ax.plot(modes_plot[:,col],
@@ -45,8 +52,9 @@ def plot_modes(modes):
                 marker='o',
                 label='modo {}'.format(col+1),
                )
-    plt.legend(loc='best')
-    return ax
+    plt.legend(loc='upper right')
+    plt.show()
+    return None
 
 def animate_modes(
     modes,
@@ -58,7 +66,6 @@ def animate_modes(
     """
     n_dof = modes.shape[0]
     n_modes = modes.shape[1]
-    horizontal_coords = np.zeros(n_dof + 1)
     vertical_coords = np.linspace(0, n_modes, n_modes+1)
     modes_plot = np.zeros((n_dof + 1, n_modes))
     modes_plot[1:, :] = modes
