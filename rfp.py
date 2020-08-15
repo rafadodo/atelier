@@ -42,7 +42,7 @@ def orthogonal_polynomials(frf, omega, weights, order):
     Returns:
         P (array): Matrix of the polynomials evaluated at the given 
                     frequencies.
-        Coeff (array): Matrix that converts Forsythe coefficients to standard
+        Conv (array): Matrix that converts Forsythe coefficients to standard
                         polynomial coefficients.
 
     [1] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
@@ -51,9 +51,9 @@ def orthogonal_polynomials(frf, omega, weights, order):
     """
     
     P = np.zeros((len(omega), order+1), dtype=complex)
-    Coeff = np.zeros((order+1, order+1))
+    Conv = np.zeros((order+1, order+1))
     R = np.zeros((len(omega), order+2))
-    Coeff_ext = np.zeros((order+1, order+2))
+    Conv_ext = np.zeros((order+1, order+2))
     
     if weights=="ones":
         q = np.ones(len(omega)) # weighting values for phi matrix
@@ -65,7 +65,7 @@ def orthogonal_polynomials(frf, omega, weights, order):
     R[:, 0] = np.zeros(len(omega))
     R[:, 1] = 1 / np.sqrt(2 * np.sum(q))
 
-    Coeff_ext[0,1] = 1 / np.sqrt(2 * np.sum(q))
+    Conv_ext[0,1] = 1 / np.sqrt(2 * np.sum(q))
 
     for k in range(2, order+2):
         V_km1 = 2*np.sum(omega * R[:, k-1] * R[:, k-2] * q)
@@ -73,18 +73,18 @@ def orthogonal_polynomials(frf, omega, weights, order):
         D_k = np.sqrt(2 * np.sum(S_k**2 * q))
         
         R[:, k] = S_k / D_k
-        Coeff_ext[:, k] = (1/D_k) *(-V_km1 * Coeff_ext[:, k-2] + \
-                          np.concatenate([[0], Coeff_ext[:-1, k-1]]))
+        Conv_ext[:, k] = (1/D_k) *(-V_km1 * Conv_ext[:, k-2] + \
+                          np.concatenate([[0], Conv_ext[:-1, k-1]]))
 
     j_k =  np.zeros((order+1,1), dtype=complex)
     for k in range(order+1):
         P[:, k] = 1j**k * R[:, k+1]
         j_k[k] = 1j**k
 
-    Coeff = Coeff_ext[:, 1:]
-    Coeff = (j_k @ j_k.conj().T).T * Coeff
+    Conv = Conv_ext[:, 1:]
+    Conv = (j_k @ j_k.conj().T).T * Conv
         
-    return P, Coeff
+    return P, Conv
 
 def rfp(frf, omega, n_dof):
     """Computes estimates for the modal parameters of the given FRF, in the
@@ -118,8 +118,8 @@ def rfp(frf, omega, n_dof):
     d = np.zeros(n+1) # Orthogonal denominator polynomial coefficients
 
     # computation of Forsythe orthogonal polynomials
-    Phi, Coeff_A = orthogonal_polynomials(frf, omega_norm, 'ones', m)
-    Theta, Coeff_B = orthogonal_polynomials(frf, omega_norm, 'frf', n)
+    Phi, Conv_A = orthogonal_polynomials(frf, omega_norm, 'ones', m)
+    Theta, Conv_B = orthogonal_polynomials(frf, omega_norm, 'frf', n)
 
     T = np.diag(frf) @ Theta[:, :-1]
     W = frf * Theta[:, -1]
@@ -135,8 +135,8 @@ def rfp(frf, omega, n_dof):
     denom = Theta @ d
     alpha = numer / denom
 
-    a = np.flipud(Coeff_A @ c) # Standard polynomial numerator coefficients
-    b = np.flipud(Coeff_B @ d) # Standard polynomial denominator coefficients
+    a = np.flipud(Conv_A @ c) # Standard polynomial numerator coefficients
+    b = np.flipud(Conv_B @ d) # Standard polynomial denominator coefficients
 
     # Calculation of the poles and residues
     res, pol, _ = signal.residue(a, b)
@@ -191,14 +191,14 @@ def grfp_denominator(frf, omega, n_modes):
     U = np.zeros((n_dof, n, n), dtype=complex)
     V = np.zeros((n_dof, n), dtype=complex)
     for dof in range(n_dof):
-        Phi, Coeff_A = orthogonal_polynomials(frf[:, dof], w_norm, 'ones', m)
-        Theta, Coeff_B = orthogonal_polynomials(frf[:, dof], w_norm, 'frf', n)
+        Phi, Conv_A = orthogonal_polynomials(frf[:, dof], w_norm, 'ones', m)
+        Theta, Conv_B = orthogonal_polynomials(frf[:, dof], w_norm, 'frf', n)
         T = np.diag(frf[:, dof]) @ Theta[:, :-1]
         W = frf[:, dof] * Theta[:, -1]
         X = -2 * np.real(Phi.T.conj() @ T)
         H = 2 * np.real(Phi.T.conj() @ W)
         U[dof, :, :] = (np.eye(X.shape[1]) - X.T @ X) @ \
-                        np.linalg.inv(Coeff_B)[:-1, :-1]
+                        np.linalg.inv(Conv_B)[:-1, :-1]
         V[dof, :] = X.T @ H
 
     A = np.sum(U@U, axis=0)
@@ -250,11 +250,11 @@ def grfp_parameters(frf, omega, denom, denom_coeff, n_modes):
     residues_norm = np.zeros((m, n_dof), dtype=complex) # frecuency-normalized residues
     poles_norm = np.zeros((m, n_dof), dtype=complex) # frequency-normalized poles
 
-    Z, Coeff_A = orthogonal_polynomials(1/denom, w_norm, 'frf', m)
+    Z, Conv_A = orthogonal_polynomials(1/denom, w_norm, 'frf', m)
     X = np.diag(1/denom)@Z
     for dof in range(n_dof):
         c[:, dof] = 2*np.real(X.conj().T@frf[:, dof])
-        numer_coef[:, dof] = np.flipud(Coeff_A@c[:, dof])
+        numer_coef[:, dof] = np.flipud(Conv_A@c[:, dof])
         numer[:, dof] = np.polyval(numer_coef[:, dof], w_j)
         alpha[:, dof] = numer[:, dof] / denom
         residues_norm[:, dof], poles_norm[:, dof], _ = signal.residue(numer_coef[:, dof],
