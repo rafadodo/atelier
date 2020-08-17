@@ -68,15 +68,12 @@ def get_damp_from_decay(decay):
 
     A = np.vstack([peak_nums, np.ones(len(peak_nums))]).T
     b = log_peak_ratios
-    plt.scatter(A[:,0], b)
 
     m, c = np.linalg.lstsq(A, b, rcond=None)[0]
     resid = np.linalg.lstsq(A, b, rcond=None)[1][0]
     R2 = 1 - resid / (b.size * b.var())
-    plt.plot(peak_nums, c + m*peak_nums)
-
     damp = m/np.sqrt(m**2 + 4*np.pi**2)
-    return damp, R2
+    return damp, R2, A, b, c, m
 
 def get_freq_from_signal(timestamps, values):
     """Calculates the frequency of a signal by
