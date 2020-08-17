@@ -29,13 +29,21 @@ def get_max_off_diagonal(A):
     max_off_diagonal = A[mask].max()
     return max_off_diagonal
 
-def plot_MAC(MAC, color_map, text_color):
+def plot_MAC(MAC, color_map, text_color, title_str='Valores MAC'):
     """Plot the input array as a MAC matrix,
     using the given colormap and text color.
     """
     fig, ax = plt.subplots()
     cax = ax.matshow(MAC, cmap=color_map)
-    fig.colorbar(cax)
+#     fig.colorbar(cax)
+    plt.title(title_str, y=1.15)
+    plt.xlabel('Modo')
+    ax.xaxis.set_label_position('top')
+    plt.ylabel('Modo')
+    ticks_lst = ['']+list(np.arange(MAC.shape[0])+1)
+    ax.set_xticklabels(ticks_lst)
+    ax.set_yticklabels(ticks_lst)
+    plt.tight_layout()
     for (i, j), z in np.ndenumerate(MAC):
         ax.text(j, i, '{:.2f}'.format(z), ha='center', va='center', color=text_color)
     return ax
