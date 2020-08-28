@@ -140,15 +140,12 @@ def rfp(frf, omega, n_dof):
 
     # Calculation of the poles and residues
     res, pol, _ = signal.residue(a, b)
-    Residuos = res[::2] * np.max(omega)
-    Polos = pol[::2] * np.max(omega)
+    residues = res[::2] * np.max(omega)
+    poles = pol[::2] * np.max(omega)
 
-    freq_n = np.abs(Polos)/2/np.pi # Natural frequencies (rad/sec)
-    xi_n = -np.real(Polos) / np.abs(Polos) # Damping ratios
-    Ai = -2 * (np.real(Residuos) * np.real(Polos) + \
-               np.imag(Residuos) * np.imag(Polos))
-    Bi = 2 * np.real(Residuos)
-    modal_const = Ai + 1j * (np.abs(Polos) * Bi)
+    freq_n = np.abs(poles)/2/np.pi # Natural frequencies (rad/sec)
+    xi_n = -np.real(poles) / np.abs(poles) # Damping ratios
+    modal_const = 1j*2*residues*np.imag(poles)
     modal_mag_n = np.abs(modal_const) # Modal constant magnitude
     modal_ang_n = np.angle(modal_const) # Modal constant phase
 
@@ -268,10 +265,7 @@ def grfp_parameters(frf, omega, denom, denom_coeff, n_modes):
 
     freq_n = np.abs(poles[:, 0])/2/np.pi
     xi_n = -np.real(poles[:, 0])/np.abs(poles[:, 0])
-    modal_const_real = -2 * (np.real(residues)*np.real(poles) + \
-                             np.imag(residues)*np.imag(poles))
-    modal_const_imag = 2 * np.abs(poles)*np.real(residues)
-    modal_const = modal_const_real + 1j*modal_const_imag
+    modal_const = 1j*2*residues*np.imag(poles)
     modal_mag_n = np.abs(modal_const) # Modal constant magnitude
     modal_ang_n = np.angle(modal_const) # Modal constant phase
 
