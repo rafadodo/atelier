@@ -36,7 +36,7 @@ def plot_column_modes(modes):
 
     fig, ax = plt.subplots()
     ax.set_title('Formas Modales')
-    ax.set(xlim=[-1, 3], ylim=[0, n_modes+1])
+    ax.set(xlim=[-1, 3], ylim=[0, n_dof+1])
     ax.set_ylabel('DOFs')
     ax.set_xticklabels([])
     n_ticks = len(ax.get_yticks())
