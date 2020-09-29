@@ -77,19 +77,21 @@ def forsythe_polys_rfp(omega, weights, order):
         
     return P, Gamma
 
-def rfp(frf, omega, n_dof):
+def rfp(frf, omega, denom_order, numer_order):
     """Computes estimates for the modal parameters of the given FRF, in the
-    frequency range given by omega, modeling it as an n_dof degrees of freedom
-    system, and following the RFP method as described by Richardson and Formenti [1].
+    frequency range given by omega, utilizing polynomials of order "numer_order"
+    and "denom_order", and following the RFP method as described by Richardson and
+    Formenti [1].
 
     Arguments:
         frf (numpy complex array):
             - Frequency Response Function vector (receptance).
         omega (numpy array):
             - Angular velocity range (rad/s)
-        n_dof (int):
-            - Number of degrees of freedom (modes) to consider for the
-            estimation
+        - denom_order (int):
+            - Order of the denominator polynomial.
+        - numer_order (int):
+            - Order of the numerator polynomial.
 
     Returns:
         alpha (numpy complex array):
@@ -104,8 +106,8 @@ def rfp(frf, omega, n_dof):
     """
 
     omega_norm = omega / np.max(omega) # omega normalization
-    m = 2*n_dof - 1 # number of polynomial terms in numerator
-    n = 2*n_dof # number of polynomial terms in denominator
+    m = numer_order # number of polynomial terms in numerator
+    n = denom_order # number of polynomial terms in denominator
     d = np.zeros(n+1) # Orthogonal denominator polynomial coefficients
 
     # computation of Forsythe orthogonal polynomials
@@ -144,11 +146,11 @@ def rfp(frf, omega, n_dof):
 
     return modal_params, alpha
 
-def grfp_denominator(frf, omega, n_modes):
+def grfp_denominator(frf, omega, denom_order, numer_order):
     """Computes an estimate of the denominator polynomial shared by all the FRFs
     given by the columns of "frf", which correspond to the frequency range given by
-    omega, assuming that the number of modes contributing is "n_modes", and following
-    the GRFP method as described by Richardson [1].
+    omega, utilizing polynomials of order "numer_order" and "denom_order", and
+    following the GRFP method as described by Richardson [1].
 
     Arguments:
         - frf (numpy complex array):
@@ -157,8 +159,10 @@ def grfp_denominator(frf, omega, n_modes):
             input DOF.
         - omega (numpy array):
             - Angular velocity range (rad/s).
-        - n_modes (int):
-            - Number of modes to assume for the estimation.
+        - denom_order (int):
+            - Order of the denominator polynomial.
+        - numer_order (int):
+            - Order of the numerator polynomial.
 
     Returns:
         - denominator (numpy complex array):
@@ -173,8 +177,8 @@ def grfp_denominator(frf, omega, n_modes):
     n_dof = frf.shape[1] # number of frf measurements (degrees of freedom)
     w_norm = omega/np.max(omega) # normalized angular frequency range
     w_j = 1j*w_norm # complex normalized angular frequency range
-    m = 2*n_modes - 1 # number of polynomial terms in numerator
-    n = 2*n_modes # number of polynomial terms in denominator
+    m = numer_order # number of polynomial terms in numerator
+    n = denom_order # number of polynomial terms in denominator
 
     U = np.zeros((n_dof, n, n), dtype=complex)
     V = np.zeros((n_dof, n), dtype=complex)
@@ -196,13 +200,13 @@ def grfp_denominator(frf, omega, n_modes):
     denominator = np.polyval(denominator_coeff, w_j)
     return denominator, denominator_coeff
 
-def grfp_parameters(frf, omega, denom, denom_coeff, n_modes):
+def grfp_parameters(frf, omega, denom, denom_coeff, numer_order):
     """Computes an estimate of the modal parameters for each of the FRFs given by
     the columns of "frf", which correspond to the frequency range given by omega,
     following the GRFP method described by Richardson and Formenti [1]. It is assumed
-    that "n_modes" is the number of modes contributing, and that the common denominator
-    polynomial shared by all the FRFs is given by "denom", formed by the coefficients
-    "denom_coeff".
+    that "numer_order" is the order of the numerator polynomial, and that the common
+    denominator polynomial shared by all the FRFs is given by "denom", formed by the
+    coefficients "denom_coeff".
 
     Arguments:
         - frf (numpy complex array):
@@ -211,12 +215,14 @@ def grfp_parameters(frf, omega, denom, denom_coeff, n_modes):
             input DOF.
         - omega (numpy array):
             - Angular velocity range (rad/s).
-        - n_modes (int):
-            - Number of modes to assume for the estimation.
+        - denom (numpy array):
+            - Common denominator polynomial shared by all the FRFs.
+        - denom_coeff (numpy array):
+            - Coefficients that form the "denom" polynomial.
+        - numer_order (int):
+            - Order of the numerator polynomial.
 
     Returns:
-        alpha (numpy complex array):
-            - Estimated receptance FRF in the given frequency range.
         modal_params (array list):
             - Modal parameter  for the estimated FRF Modal parameter list:
                 [freq_n, xi_n, modal_mag_n, modal_ang_n]
@@ -226,7 +232,7 @@ def grfp_parameters(frf, omega, denom, denom_coeff, n_modes):
     Orlando, FL, 1985.
     """
 
-    m = 2*n_modes - 1 # number of polynomial terms in numerator
+    m = numer_order
     n_dof = frf.shape[1] # number of frf measurements (degrees of freedom)
     w_norm = omega/np.max(omega) # normalized angular frequency range
     w_j = 1j*w_norm # complex normalized angular frequency range
