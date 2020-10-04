@@ -45,4 +45,4 @@ def read_nodes_accel(filename):
                 freq_idx += 1
             i += 1
 
-    return freq, accel
+    return freq, accel, nodes
