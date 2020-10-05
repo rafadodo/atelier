@@ -94,11 +94,11 @@ def rfp(frf, omega, denom_order, numer_order):
             - Order of the numerator polynomial.
 
     Returns:
-        alpha (numpy complex array):
-            - Estimated receptance FRF in the given frequency range.
         modal_params (array list):
             - Modal parameter  for the estimated FRF Modal parameter list:
                 [freq_n, xi_n, modal_mag_n, modal_ang_n]
+        alpha (numpy complex array):
+            - Estimated receptance FRF in the given frequency range.
 
     [1] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
     response measurements using rational fraction polynomials", 1st IMAC Conference,
@@ -267,4 +267,4 @@ def grfp_parameters(frf, omega, denom, denom_coeff, numer_order):
     modal_ang_n = np.angle(modal_const) # Modal constant phase
 
     modal_params = [freq_n, xi_n, modal_mag_n, modal_ang_n]
-    return alpha, modal_params
+    return modal_params, alpha
