@@ -113,3 +113,29 @@ def plot_modes_complexity(modes):
                      [0,np.abs(modes[dof, mode])],
                      marker='o')
     return None
+
+def plot_3d_mode(node_order, coords, connections, mode_vec, magnif):
+    """"""
+    undeformed = np.zeros((len(coords), 3))
+    for node_idx in range(len(coords)):
+        node_name = list(node_order.keys())[list(node_order.values()).index(node_idx)]
+        undeformed[node_idx,:] = coords[node_name]
+    delta_pos = np.real(mode_vec.reshape((len(coords)-1, 3)))/max(np.abs(mode_vec))
+    deformed = undeformed + magnif*(np.concatenate((np.zeros((1,3)), delta_pos)))
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(undeformed[:,0],undeformed[:,1],undeformed[:,2], color='k')
+    ax.scatter(deformed[:,0],deformed[:,1],deformed[:,2], color='r')
+    for source, targets in connections.items():
+        for target in targets:
+            i, j = node_order[source], node_order[target]
+            ax.plot([undeformed[i,0], undeformed[j,0]],
+                    [undeformed[i,1], undeformed[j,1]],
+                    [undeformed[i,2], undeformed[j,2]],
+                    color='k', linewidth=0.75)
+            ax.plot([deformed[i,0], deformed[j,0]],
+                    [deformed[i,1], deformed[j,1]],
+                    [deformed[i,2], deformed[j,2]],
+                    color='r', linewidth=0.75)
+    return None
