@@ -16,7 +16,7 @@ def get_MAC_matrix(modes_A, modes_B):
     """
     MAC_matrix = np.zeros((modes_A.shape[1], modes_B.shape[1]))
     for col_A in range(modes_A.shape[1]):
-        for col_B in range(modes_A.shape[1]):
+        for col_B in range(modes_B.shape[1]):
             MAC_matrix[col_A, col_B] = get_MAC(modes_A[:, col_A],
                                                modes_B[:, col_B])
     return MAC_matrix
