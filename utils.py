@@ -114,7 +114,7 @@ def plot_modes_complexity(modes):
                      marker='o')
     return None
 
-def plot_3d_mode(node_order, coords, connections, mode_vec, magnif):
+def plot_3d_mode(node_order, coords, connections, mode_vec, mode_name='', magnif=1):
     """"""
     undeformed = np.zeros((len(coords), 3))
     for node_idx in range(len(coords)):
@@ -125,6 +125,7 @@ def plot_3d_mode(node_order, coords, connections, mode_vec, magnif):
     
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+    ax.set_title(mode_name)
     ax.scatter(undeformed[:,0],undeformed[:,1],undeformed[:,2], color='k')
     ax.scatter(deformed[:,0],deformed[:,1],deformed[:,2], color='r')
     for source, targets in connections.items():
