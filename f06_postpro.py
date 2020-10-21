@@ -38,7 +38,7 @@ def read_nodes_accel(filename):
                     node = lines[i].split()[1]
                     mag = np.array(lines[i].split()[3:6],
                                    dtype=float)
-                    phase = np.array(lines[i+1].split()[3:6],
+                    phase = np.array(lines[i+1].split()[0:3],
                                      dtype=float) * np.pi/180
                     accel[node][freq_idx, :]  = mag*np.exp(1j*phase)
                     i += 2
