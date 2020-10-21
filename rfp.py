@@ -236,13 +236,14 @@ def grfp_parameters(frf, omega, denom, denom_coeff, numer_order):
     n_dof = frf.shape[1] # number of frf measurements (degrees of freedom)
     w_norm = omega/np.max(omega) # normalized angular frequency range
     w_j = 1j*w_norm # complex normalized angular frequency range
+    total_poles = len(denom_coeff)-1 # number of residues and poles expected in the solution
     c = np.zeros((m+1, n_dof)) # orthogonal numerator polynomial coefficients
     # standard numerator polynomial coefficients
     numer_coef = np.zeros((m+1, n_dof), dtype=complex)
     numer = np.zeros((len(w_norm), n_dof), dtype=complex) # numerator polynomials
     alpha = np.zeros((len(w_norm), n_dof), dtype=complex) # FRF estimations
-    residues_norm = np.zeros((m, n_dof), dtype=complex) # frecuency-normalized residues
-    poles_norm = np.zeros((m, n_dof), dtype=complex) # frequency-normalized poles
+    residues_norm = np.zeros((total_poles, n_dof), dtype=complex) # frecuency-normalized residues
+    poles_norm = np.zeros((total_poles, n_dof), dtype=complex) # frequency-normalized poles
 
     Z, Gamma_phi = forsythe_polys_rfp(w_norm, np.abs(1/denom)**2, m)
     X = np.diag(1/denom)@Z
