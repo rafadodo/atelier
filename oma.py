@@ -32,26 +32,26 @@ def get_peak_picking_modes(psd, angle_th, mode_idxes):
 
     return modes_pp
 
-def get_efdd_segment(s_vec, peak_idx, mac_th):
+def get_efdd_segment(s_vec, peak_idx, mac_th, sv_num):
     """Returns the frequency indexes around peak_idx where the psd
     matrix having s_vec as its singular vector matrix can be
     considered as the psd of the 1DOF system, corresponding to the
-    mode shape that the first singular vector takes at peak_idx.
+    mode shape that the singular vector number sv_num takes at peak_idx.
 
     A MAC above the threshold mac_th is used as a criterion."""
 
-    sdof_mode = s_vec[peak_idx, :, 0]
+    sdof_mode = s_vec[peak_idx, :, sv_num]
     lower_idx = peak_idx
     mac_value = 1
     while (mac_value>mac_th) & (lower_idx>0):
         lower_idx -= 1
-        mac_value = mac.get_MAC(sdof_mode, s_vec[lower_idx, :, 0])
+        mac_value = mac.get_MAC(sdof_mode, s_vec[lower_idx, :, sv_num])
 
     upper_idx = peak_idx
     mac_value = 1
     while (mac_value>mac_th) & (upper_idx<s_vec.shape[0]//2):
         upper_idx += 1
-        mac_value = mac.get_MAC(sdof_mode, s_vec[upper_idx, :, 0])
+        mac_value = mac.get_MAC(sdof_mode, s_vec[upper_idx, :, sv_num])
 
     return lower_idx, upper_idx
 
