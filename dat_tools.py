@@ -35,5 +35,33 @@ def read_node_coords(filename, nodes):
                                 )
                     coords[node] = np.array(chunks[3:6], dtype=float)
             i += 1
-            
+
     return coords
+
+def read_damping(filename):
+    damp_table_str = 'TABDMP1'
+    expected_table_str_length = 6
+    chunk_size = 8
+    with open(filename,'r') as f:
+        lines = f.read().splitlines()
+        i = 0
+        #
+        while i<len(lines):
+            line_split = lines[i].split()
+            if damp_table_str in line_split:
+                i += 1
+                line = lines[i]
+                chunks = list()
+                for c in range(0, len(line), chunk_size):
+                    chunks.append(line[c:c+chunk_size].strip())
+                # Check if damping is constant and defined by only 2 values
+                if (len(chunks)>expected_table_str_length or
+                    chunks[2]!=chunks[4]):
+                    raise ValueError(
+                        'Only constant damping defined by 2 values is supported'
+                        )
+                else:
+                    damping = float(nastran_float(chunks[2]))
+            i += 1
+
+    return damping
