@@ -19,8 +19,10 @@ def print_modes_dataframe(data, headers, decimals):
     format_str = '{:.' + str(decimals) + 'f}'
     pd.options.display.float_format = format_str.format
     df = pd.DataFrame(data=data, columns=headers)
-    df.set_index(headers[0])
     df[headers[0]] = df[headers[0]].map('{:.0f}'.format)
+    df.set_index(headers[0], inplace=True)
+    df.columns.name = df.index.name
+    df.index.name = None
     return df
 
 def plot_column_modes(modes):
