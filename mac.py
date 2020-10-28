@@ -29,17 +29,25 @@ def get_max_off_diagonal(A):
     max_off_diagonal = A[mask].max()
     return max_off_diagonal
 
-def plot_MAC(MAC, color_map, text_color, title_str='Valores MAC'):
-    """Plot the input array as a MAC matrix,
-    using the given colormap and text color.
+def plot_MAC(MAC, color_map, text_color, title_str='MAC', labels=['', '']):
+    """Plot a given Modal Assurance Criterion matrix.
+
+    Arguments:
+        MAC (array): MAC matrix to plot.
+        labels (string list): Labels for the rows and columns of the matrix respectively.
+        color_map (): Color map to use for MAC values display.
+        text_color (): Text color to use for MAC values display.
+        title_str (): Title for the MAC plot.
+
+    Returns:
+        ax (matplotlib figure axes): axes for the resulting plot.
     """
     fig, ax = plt.subplots()
     cax = ax.matshow(MAC, cmap=color_map)
-#     fig.colorbar(cax)
     plt.title(title_str, y=1.15)
-    plt.xlabel('Modo')
+    plt.ylabel(labels[0])
+    plt.xlabel(labels[1])
     ax.xaxis.set_label_position('top')
-    plt.ylabel('Modo')
     ticks_lst = ['']+list(np.arange(MAC.shape[0])+1)
     ax.set_xticklabels(ticks_lst)
     ax.set_yticklabels(ticks_lst)
