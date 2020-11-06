@@ -1,3 +1,4 @@
+*.tex
 *.gif
 *.pickle
 **/__pycache__/
