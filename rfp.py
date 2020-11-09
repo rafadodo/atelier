@@ -43,9 +43,9 @@ def forsythe_polys_rfp(omega, weights, order):
         Gamma (array): Matrix that converts Forsythe coefficients to standard
                         polynomial coefficients.
 
-    [1] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
-    response measurements using rational fraction polynomials", 1st IMAC Conference,
-    Orlando, FL, 1986.
+    [1] George E. Forsythe "Generation and Use of Orthogonal Polynomials for
+    Data-Fitting With a Digital Computer", Journal of the Society for Industrial and
+    Applied Mathematics, 1957.
     """
 
     q = weights
