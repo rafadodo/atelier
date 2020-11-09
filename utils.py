@@ -10,12 +10,13 @@ def printMatrix(a):
             print("{:.2E}".format(col), end=" ")
         print("")
 
-def print_modes_dataframe(data, headers, decimals):
+def print_modes_dataframe(data, headers, decimals, save_title='table_tex'):
     """Prints the columns of the "data" matrix, the first of which
     is expected to contain mode numbers, as a dataframe, with
     the precision given by "decimals".
     Column names are given by "headers".
     """
+    table_str = save_title + '.tex'
     format_str = '{:.' + str(decimals) + 'f}'
     pd.options.display.float_format = format_str.format
     df = pd.DataFrame(data=data, columns=headers)
@@ -23,6 +24,7 @@ def print_modes_dataframe(data, headers, decimals):
     df.set_index(headers[0], inplace=True)
     df.columns.name = df.index.name
     df.index.name = None
+    df.to_latex(table_str)
     return df
 
 def plot_column_modes(modes):
