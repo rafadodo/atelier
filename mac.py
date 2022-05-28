@@ -21,14 +21,6 @@ def get_MAC_matrix(modes_A, modes_B):
                                                modes_B[:, col_B])
     return MAC_matrix
 
-def get_max_off_diagonal(A):
-    """Obtain the maximum value of an array ignoring its diagonal.
-    """
-    mask = np.ones(A.shape, dtype=bool)
-    np.fill_diagonal(mask, 0)
-    max_off_diagonal = A[mask].max()
-    return max_off_diagonal
-
 def plot_MAC(MAC, color_map, text_color, title_str='MAC', labels=['', '']):
     """Plot a given Modal Assurance Criterion matrix.
 

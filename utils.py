@@ -10,6 +10,14 @@ def printMatrix(a):
             print("{:.2E}".format(col), end=" ")
         print("")
 
+def get_max_off_diagonal(A):
+    """Obtain the maximum value of an array ignoring its diagonal.
+    """
+    mask = np.ones(A.shape, dtype=bool)
+    np.fill_diagonal(mask, 0)
+    max_off_diagonal = A[mask].max()
+    return max_off_diagonal
+
 def print_modes_dataframe(data, headers, decimals, save_title='table_tex'):
     """Prints the columns of the "data" matrix, the first of which
     is expected to contain mode numbers, as a dataframe, with
