@@ -35,7 +35,7 @@ def read_node_coords(filename, nodes):
         nodes (list of str): Node numbers to search for in the file.
 
     Returns:
-        coords (dict): Node numbers as keys, and their coordinates as values (numpy arrays).
+        dict: Node numbers as keys, and their coordinates as values (numpy arrays).
 
     Raises:
         FileNotFoundError: If the file cannot be found.
