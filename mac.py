@@ -1,18 +1,42 @@
+# -*- coding: utf-8 -*-
+"""
+This module contains functions that assist in dealing with MAC (Modal Assurance Criterion) values
+and matrices.
+
+Functions:
+- get_MAC(mode_A, mode_B): Computes the MAC value between two mode shape vectors.
+- get_MAC_matrix(modes_A, modes_B): Computes the MAC matrix between two sets of mode shapes.
+- plot_MAC(MAC, color_map, text_color, title_str, labels):   Plots a given MAC matrix.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def get_MAC(mode_A, mode_B):
-    """Obtain the MAC for the modes defined by
-    column vectors A and B.
+    """Obtain the MAC for the mode shapes defined by column vectors A and B.
+
+    Parameters:
+        mode_A (numpy.ndarray): A column vector representing a mode shape.
+        mode_B (numpy.ndarray): A column vector representing another mode shape.
+
+    Returns:
+        float: The MAC value
     """
     MAC = abs(mode_A.T @ mode_B.conj())**2 / \
           (abs(mode_A.T @ mode_A.conj()) * abs(mode_B.T @ mode_B.conj()))
     return MAC
-    
+
+
 def get_MAC_matrix(modes_A, modes_B):
-    """Obtain the MAC matrix for the modes represented by
-    the columns of matrices modes_A and modes_B.
-    Rows of the MAC matrix correspond to modes from modes_A.
+    """Compute the MAC matrix for two sets of mode shapes.
+
+    Parameters:
+        modes_A (numpy.ndarray): A matrix where each column represents a mode shape.
+        modes_B (numpy.ndarray): Another matrix where each column represents a mode shape.
+
+    Returns:
+        numpy.ndarray: A MAC matrix where each element (i, j) represents the MAC value between
+                       mode i from modes_A and mode j from modes_B.
     """
     MAC_matrix = np.zeros((modes_A.shape[1], modes_B.shape[1]))
     for col_A in range(modes_A.shape[1]):
@@ -21,18 +45,19 @@ def get_MAC_matrix(modes_A, modes_B):
                                                modes_B[:, col_B])
     return MAC_matrix
 
-def plot_MAC(MAC, color_map, text_color, title_str='MAC', labels=['', '']):
-    """Plot a given Modal Assurance Criterion matrix.
 
-    Arguments:
-        MAC (array): MAC matrix to plot.
-        labels (string list): Labels for the rows and columns of the matrix respectively.
-        color_map (): Color map to use for MAC values display.
-        text_color (): Text color to use for MAC values display.
-        title_str (): Title for the MAC plot.
+def plot_MAC(MAC, color_map, text_color, title_str='MAC', labels=['', '']):
+    """Plot a given Modal Assurance Criterion (MAC) matrix.
+
+    Parameters:
+        MAC (numpy.ndarray): The MAC matrix to plot.
+        color_map (str): The colormap to use for the MAC values display.
+        text_color (str): Color for the text displaying MAC values on the plot.
+        title_str (str, optional): Title for the MAC plot.
+        labels (list of str, optional): Labels for the rows and columns of the matrix.
 
     Returns:
-        ax (matplotlib figure axes): axes for the resulting plot.
+        matplotlib.axes.Axes: The axes object of the resulting plot.
     """
     fig, ax = plt.subplots()
     cax = ax.matshow(MAC, cmap=color_map)
