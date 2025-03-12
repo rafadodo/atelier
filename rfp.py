@@ -95,12 +95,11 @@ def rfp(frf, omega, denom_order, numer_order):
         response measurements using rational fraction polynomials", 1st IMAC Conference,
         Orlando, FL, 1982.
     """
-    omega_norm = omega / np.max(omega) # omega normalization
-    m = numer_order # number of polynomial terms in numerator
-    n = denom_order # number of polynomial terms in denominator
+    omega_norm = omega / np.max(omega)
+    m = numer_order
+    n = denom_order
     d = np.zeros(n+1) # Orthogonal denominator polynomial coefficients
 
-    # computation of Forsythe orthogonal polynomials
     Phi, Gamma_phi = forsythe_polys_rfp(omega_norm, np.ones(len(omega_norm)), m)
     Theta, Gamma_theta = forsythe_polys_rfp(omega_norm, np.abs(frf)**2, n)
 
@@ -113,7 +112,7 @@ def rfp(frf, omega, denom_order, numer_order):
     d[-1] = 1
     c = H - X @ d[:-1] # Orthogonal numerator polynomial coefficients
 
-    # calculation of the estimated FRF (alpha)
+    # Calculation of the estimated FRF (alpha)
     numer = Phi @ c
     denom = Theta @ d
     alpha = numer / denom
@@ -126,13 +125,13 @@ def rfp(frf, omega, denom_order, numer_order):
     residues = res[::2] * np.max(omega)
     poles = pol[::2] * np.max(omega)
 
-    freq_n = np.abs(poles)/2/np.pi # Natural frequencies (rad/sec)
-    xi_n = -np.real(poles) / np.abs(poles) # Damping ratios
+    freq_n = np.abs(poles)/2/np.pi
+    xi_n = -np.real(poles) / np.abs(poles)
     modal_const = 1j*2*residues*np.imag(poles)
-    modal_mag_n = np.abs(modal_const) # Modal constant magnitude
-    modal_ang_n = np.angle(modal_const) # Modal constant phase
+    modal_mag_n = np.abs(modal_const)
+    modal_ang_n = np.angle(modal_const)
 
-    modal_params = [freq_n, xi_n, modal_mag_n, modal_ang_n] # Modal Parameters
+    modal_params = [freq_n, xi_n, modal_mag_n, modal_ang_n]
 
     return modal_params, alpha
 
@@ -157,11 +156,11 @@ def grfp_denominator(frf, omega, denom_order, numer_order):
         M. H. Richardson, "Global frequency and damping estimates from frequency
         response measurements", 4th IMAC Conference, Los Angeles, CA, 1986.
     """
-    n_dof = frf.shape[1] # number of frf measurements (degrees of freedom)
-    w_norm = omega/np.max(omega) # normalized angular frequency range
-    w_j = 1j*w_norm # complex normalized angular frequency range
-    m = numer_order # number of polynomial terms in numerator
-    n = denom_order # number of polynomial terms in denominator
+    n_dof = frf.shape[1]
+    w_norm = omega/np.max(omega)
+    w_j = 1j*w_norm
+    m = numer_order
+    n = denom_order
 
     U = np.zeros((n_dof, n, n), dtype=complex)
     V = np.zeros((n_dof, n), dtype=complex)
@@ -209,17 +208,17 @@ def grfp_parameters(frf, omega, denom, denom_coeff, numer_order):
         Orlando, FL, 1985.
     """
     m = numer_order
-    n_dof = frf.shape[1] # number of frf measurements (degrees of freedom)
-    w_norm = omega/np.max(omega) # normalized angular frequency range
-    w_j = 1j*w_norm # complex normalized angular frequency range
-    total_poles = len(denom_coeff)-1 # number of residues and poles expected in the solution
+    n_dof = frf.shape[1]
+    w_norm = omega/np.max(omega)
+    w_j = 1j*w_norm
+    total_poles = len(denom_coeff)-1
     c = np.zeros((m+1, n_dof)) # orthogonal numerator polynomial coefficients
     # standard numerator polynomial coefficients
     numer_coef = np.zeros((m+1, n_dof), dtype=complex)
-    numer = np.zeros((len(w_norm), n_dof), dtype=complex) # numerator polynomials
-    alpha = np.zeros((len(w_norm), n_dof), dtype=complex) # FRF estimations
-    residues_norm = np.zeros((total_poles, n_dof), dtype=complex) # frecuency-normalized residues
-    poles_norm = np.zeros((total_poles, n_dof), dtype=complex) # frequency-normalized poles
+    numer = np.zeros((len(w_norm), n_dof), dtype=complex)
+    alpha = np.zeros((len(w_norm), n_dof), dtype=complex)
+    residues_norm = np.zeros((total_poles, n_dof), dtype=complex)
+    poles_norm = np.zeros((total_poles, n_dof), dtype=complex)
 
     Z, Gamma_phi = forsythe_polys_rfp(w_norm, np.abs(1/denom)**2, m)
     X = np.diag(1/denom)@Z
@@ -240,8 +239,8 @@ def grfp_parameters(frf, omega, denom, denom_coeff, numer_order):
     freq_n = np.abs(poles[:, 0])/2/np.pi
     xi_n = -np.real(poles[:, 0])/np.abs(poles[:, 0])
     modal_const = 1j*2*residues*np.imag(poles)
-    modal_mag_n = np.abs(modal_const) # Modal constant magnitude
-    modal_ang_n = np.angle(modal_const) # Modal constant phase
+    modal_mag_n = np.abs(modal_const)
+    modal_ang_n = np.angle(modal_const)
 
     modal_params = [freq_n, xi_n, modal_mag_n, modal_ang_n]
     return modal_params, alpha
