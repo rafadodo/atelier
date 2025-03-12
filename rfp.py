@@ -1,26 +1,16 @@
 # -*- coding: utf-8 -*-
-"""This module contains the functions necessary to perform the RFP modal
-analysis method as described in Richardson & Formenti [1] [2] [3].
+"""
+This module contains functions for modal parameter estimation using the Rational
+Fraction Polynomials (RFP) method, as described in the corresponding literature
+(see references inside each function).
 
-forsythe_polys_rfp: computes the Forsythe polynomials for a given FRF
-
-rfp: computes the modal constants for a given FRF.
-
-grfp_denominator: computes the common denominator polynomial for a given
-    set of FRFs.
-
-grfp_parameters: computes the modal parameters for a set of FRFs.
-
-[1] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
-response measurements using rational fraction polynomials", 1st IMAC Conference,
-Orlando, FL, 1986.
-
-[2] Richardson, M. H. "Global frequency and damping estimates from frequency
-response measurements", 4th IMAC Conference, Los Angeles, CA, 1986.
-
-[3] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
-response measurements using rational fraction polynomials", 1st IMAC Conference,
-Orlando, FL, 1986.
+Functions:
+- forsythe_polys_rfp(omega, weights, order): Computes Forsythe polynomials for an FRF.
+- rfp(frf, omega, denom_order, numer_order): Computes modal constants for an FRF.
+- grfp_denominator(frf, omega, denom_order, numer_order): Computes the common denominator
+  polynomial for a given set of FRFs.
+- grfp_parameters(frf, omega, denom, denom_coeff, numer_order): Computes modal parameters
+  from a set of FRFs.
 """
 
 import numpy as np
@@ -28,24 +18,28 @@ from scipy import signal
 
 
 def forsythe_polys_rfp(omega, weights, order):
-    """Compute the Forsythe orthogonal polynomials to be used in the RFP
-    method as described by Richardson and Formenti [1], to approximate a
-    frequency response function FRF.
-    
-    Arguments:
-        omega (array): Angular velocity range (rad/s)
-        weights (array): Weights to use in the orthogonalization
-        order (int): Maximum polynomial order
+    """Computes Forsythe orthogonal polynomials following the formulation proposed by Richardson
+    and Formenti for the Rational Fraction Polynomials method (see References below).
+
+    Parameters:
+        omega (numpy.ndarray, shape (n_freq,)): Angular frequency range (rad/s).
+        weights (numpy.ndarray, shape (n_freq,)): Weights used for orthogonalization.
+        order (int): Maximum polynomial order.
 
     Returns:
-        P (array): Matrix of the polynomials evaluated at the given 
-                    frequencies.
-        Gamma (array): Matrix that converts Forsythe coefficients to standard
-                        polynomial coefficients.
+        tuple:
+            - P (numpy.ndarray, shape (n_freq, order+1)): Matrix of polynomials evaluated
+              at the given frequencies.
+            - Gamma (numpy.ndarray, shape (order+1, order+1)): Transformation matrix
+              converting Forsythe coefficients to standard polynomial coefficients.
 
-    [1] George E. Forsythe "Generation and Use of Orthogonal Polynomials for
-    Data-Fitting With a Digital Computer", Journal of the Society for Industrial and
-    Applied Mathematics, 1957.
+    References:
+        - George E. Forsythe "Generation and Use of Orthogonal Polynomials for
+            Data-Fitting With a Digital Computer", Journal of the Society for Industrial and
+            Applied Mathematics, 1957.
+        - Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
+            response measurements using rational fraction polynomials", 1st IMAC Conference,
+            Orlando, FL, 1982.
     """
 
     q = weights
@@ -78,33 +72,29 @@ def forsythe_polys_rfp(omega, weights, order):
     return P, Gamma
 
 def rfp(frf, omega, denom_order, numer_order):
-    """Computes estimates for the modal parameters of the given FRF, in the
-    frequency range given by omega, utilizing polynomials of order "numer_order"
-    and "denom_order", and following the RFP method as described by Richardson and
-    Formenti [1].
+    """Estimates modal parameters from a given Frequency Response Function (FRF)
+    using the Rational Fraction Polynomials (RFP) method (see Reference below).
 
-    Arguments:
-        frf (numpy complex array):
-            - Frequency Response Function vector (receptance).
-        omega (numpy array):
-            - Angular velocity range (rad/s)
-        - denom_order (int):
-            - Order of the denominator polynomial.
-        - numer_order (int):
-            - Order of the numerator polynomial.
+    Parameters:
+        frf (numpy.ndarray, shape (n_freq,)): Frequency Response Function (receptance).
+        omega (numpy.ndarray, shape (n_freq,)): Angular frequency range (rad/s).
+        denom_order (int): Order of the denominator polynomial.
+        numer_order (int): Order of the numerator polynomial.
 
     Returns:
-        modal_params (array list):
-            - Modal parameter  for the estimated FRF Modal parameter list:
-                [freq_n, xi_n, modal_mag_n, modal_ang_n]
-        alpha (numpy complex array):
-            - Estimated receptance FRF in the given frequency range.
+        tuple:
+            - modal_params (list of numpy.ndarray): List containing estimated modal parameters:
+                - freq_n (numpy.ndarray): Natural frequencies (Hz).
+                - xi_n (numpy.ndarray): Damping ratios.
+                - modal_mag_n (numpy.ndarray): Modal constant magnitudes.
+                - modal_ang_n (numpy.ndarray): Modal constant phases.
+            - alpha (numpy.ndarray, shape (n_freq,)): Estimated FRF in the given frequency range.
 
-    [1] Richardson, M. H. & Formenti D. L. "Parameter estimation from frequency
-    response measurements using rational fraction polynomials", 1st IMAC Conference,
-    Orlando, FL, 1986.
+    Reference:
+        M. H. Richardson & D. L. Formenti, "Parameter estimation from frequency
+        response measurements using rational fraction polynomials", 1st IMAC Conference,
+        Orlando, FL, 1982.
     """
-
     omega_norm = omega / np.max(omega) # omega normalization
     m = numer_order # number of polynomial terms in numerator
     n = denom_order # number of polynomial terms in denominator
@@ -147,33 +137,26 @@ def rfp(frf, omega, denom_order, numer_order):
     return modal_params, alpha
 
 def grfp_denominator(frf, omega, denom_order, numer_order):
-    """Computes an estimate of the denominator polynomial shared by all the FRFs
-    given by the columns of "frf", which correspond to the frequency range given by
-    omega, utilizing polynomials of order "numer_order" and "denom_order", and
-    following the GRFP method as described by Richardson [1].
+    """Estimates the common denominator polynomial for a set of FRFs using the
+    Global Rational Fraction Polynomial (GRFP) method (see Reference below).
 
-    Arguments:
-        - frf (numpy complex array):
-            - Frequency Response Function matrix. Each column contains the FRF
-            for a particular DOF, with all of them corresponding the reference or
-            input DOF.
-        - omega (numpy array):
-            - Angular velocity range (rad/s).
-        - denom_order (int):
-            - Order of the denominator polynomial.
-        - numer_order (int):
-            - Order of the numerator polynomial.
+    Parameters:
+        frf (numpy.ndarray, shape (n_freq, n_dof)): FRF matrix where each column represents
+            the FRF for a specific DOF, all corresponding to the reference/input DOF.
+        omega (numpy.ndarray, shape (n_freq,)): Angular frequency range (rad/s).
+        denom_order (int): Order of the denominator polynomial.
+        numer_order (int): Order of the numerator polynomial.
 
     Returns:
-        - denominator (numpy complex array):
-             - Estimated denominator polynomial.
-        - denominator_coeff (numpy complex array):
-            - Estimated denominator polynomial coefficients.
+        tuple:
+            - denominator (numpy.ndarray, shape (n_freq,)): Estimated common denominator polynomial.
+            - denominator_coeff (numpy.ndarray, shape (denom_order+1,)): Estimated denominator
+              polynomial coefficients.
 
-    [1] Richardson, M. H. "Global frequency and damping estimates from frequency
-    response measurements", 4th IMAC Conference, Los Angeles, CA, 1986.
+    Reference:
+        M. H. Richardson, "Global frequency and damping estimates from frequency
+        response measurements", 4th IMAC Conference, Los Angeles, CA, 1986.
     """
-
     n_dof = frf.shape[1] # number of frf measurements (degrees of freedom)
     w_norm = omega/np.max(omega) # normalized angular frequency range
     w_j = 1j*w_norm # complex normalized angular frequency range
@@ -201,37 +184,30 @@ def grfp_denominator(frf, omega, denom_order, numer_order):
     return denominator, denominator_coeff
 
 def grfp_parameters(frf, omega, denom, denom_coeff, numer_order):
-    """Computes an estimate of the modal parameters for each of the FRFs given by
-    the columns of "frf", which correspond to the frequency range given by omega,
-    following the GRFP method described by Richardson and Formenti [1]. It is assumed
-    that "numer_order" is the order of the numerator polynomial, and that the common
-    denominator polynomial shared by all the FRFs is given by "denom", formed by the
-    coefficients "denom_coeff".
+    """Computes modal parameters for a set of FRFs using the GRFP method (see Reference below).
 
-    Arguments:
-        - frf (numpy complex array):
-            - Frequency Response Function matrix. Each column contains the FRF
-            for a particular DOF, with all of them corresponding the reference or
-            input DOF.
-        - omega (numpy array):
-            - Angular velocity range (rad/s).
-        - denom (numpy array):
-            - Common denominator polynomial shared by all the FRFs.
-        - denom_coeff (numpy array):
-            - Coefficients that form the "denom" polynomial.
-        - numer_order (int):
-            - Order of the numerator polynomial.
+    Parameters:
+        frf (numpy.ndarray, shape (n_freq, n_dof)): FRF matrix where each column represents
+            the FRF for a specific DOF, all corresponding to the reference/input DOF.
+        omega (numpy.ndarray, shape (n_freq,)): Angular frequency range (rad/s).
+        denom (numpy.ndarray, shape (n_freq,)): Common denominator polynomial shared by all FRFs.
+        denom_coeff (numpy.ndarray, shape (denom_order+1,)): Coefficients of the denominator polynomial.
+        numer_order (int): Order of the numerator polynomial.
 
     Returns:
-        modal_params (array list):
-            - Modal parameter  for the estimated FRF Modal parameter list:
-                [freq_n, xi_n, modal_mag_n, modal_ang_n]
+        tuple:
+            - modal_params (list of numpy.ndarray): List containing estimated modal parameters:
+                - freq_n (numpy.ndarray): Natural frequencies (Hz).
+                - xi_n (numpy.ndarray): Damping ratios.
+                - modal_mag_n (numpy.ndarray): Modal constant magnitudes.
+                - modal_ang_n (numpy.ndarray): Modal constant phases.
+            - alpha (numpy.ndarray, shape (n_freq, n_dof)): Estimated FRF matrix.
 
-    [1] Richardson, M. H. & Formenti, D. L. "Global curve fitting of frequency response
-    measurements using the Rational Fraction Polynomial method", 3rd IMAC Conference,
-    Orlando, FL, 1985.
+    Reference:
+        M. H. Richardson & D. L. Formenti, "Global curve fitting of frequency response
+        measurements using the Rational Fraction Polynomial method", 3rd IMAC Conference,
+        Orlando, FL, 1985.
     """
-
     m = numer_order
     n_dof = frf.shape[1] # number of frf measurements (degrees of freedom)
     w_norm = omega/np.max(omega) # normalized angular frequency range
