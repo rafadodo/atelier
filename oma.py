@@ -7,14 +7,10 @@ described in the corresponding literature, which can be found in each function d
 Functions:
 - get_peak_picking_modes(psd, angle_th, mode_idxes): Extracts mode shapes from a PSD matrix.
 - get_efdd_segment(sing_vectors, peak_idx, mac_th, sv_num): Identifies frequency indexes for EFDD.
-- get_damp_from_decay(decay): Estimates damping using logarithmic decrement.
-- get_freq_from_signal(timestamps, values): Computes signal frequency from zero crossings.
 - get_mean_modeshape_efdd(segment_idxes, peak_idx, sing_vectors): Computes a mean mode shape.
 - curve_fit_psd_peak(freq, psd, indexes, f_hat): Fits a PSD peak to a 1DOF system model.
 """
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy import signal
 
 import mac
 
@@ -23,8 +19,10 @@ def get_peak_picking_modes(psd, angle_th, mode_idxes):
     """Extracts mode shapes from a PSD matrix using the peak-picking method (see Reference below).
 
     Parameters:
-        psd (numpy.ndarray): The power spectral density (PSD) matrix, where rows correspond
-                             to frequencies and columns correspond to DOFs.
+        psd (numpy.ndarray, shape (n_freq, n_dof)):
+            The power spectral density matrix.
+            - n_freq: Number of frequency bins.
+            - n_dof: Number of degrees of freedom.
         angle_th (float): The phase difference threshold in degrees.
         mode_idxes (list of int): List of indexes corresponding to mode frequencies.
 
@@ -86,82 +84,15 @@ def get_efdd_segment(sing_vectors, peak_idx, mac_th, sv_num):
     mac_value = 1
     while (mac_value>mac_th) & (lower_idx>0):
         lower_idx -= 1
-        mac_value = mac.get_MAC(sdof_mode, sing_vectors[lower_idx, :, sv_num])
+        mac_value = mac.get_mac_value(sdof_mode, sing_vectors[lower_idx, :, sv_num])
 
     upper_idx = peak_idx
     mac_value = 1
     while (mac_value>mac_th) & (upper_idx<sing_vectors.shape[0]//2):
         upper_idx += 1
-        mac_value = mac.get_MAC(sdof_mode, sing_vectors[upper_idx, :, sv_num])
+        mac_value = mac.get_mac_value(sdof_mode, sing_vectors[upper_idx, :, sv_num])
 
     return lower_idx, upper_idx
-
-
-def get_damp_from_decay(decay):
-    """Estimates the damping of a decaying time-domain signal by analyzing peak values and
-    applying a linear regression to logarithmic peak ratios.
-
-    Parameters:
-        decay (numpy.ndarray): Time-series data representing the decaying response.
-
-    Returns:
-        tuple:
-            - damp (float): Estimated damping ratio.
-            - R2 (float): Coefficient of determination (fit quality).
-            - A (numpy.ndarray): Design matrix used in the least squares regression.
-            - b (numpy.ndarray): Logarithmic peak ratios.
-            - c (float): Intercept from least squares fit.
-            - m (float): Slope from least squares fit.
-    """
-    peak_ind = np.array([m for m in signal.argrelmax(abs(decay), order=1)]).flatten()
-    log_peak_ratios = np.zeros(len(peak_ind)-1)
-    for i in range(len(peak_ind)-1):
-        log_peak_ratios[i] = 2*np.log(abs(decay[peak_ind[0]] / decay[peak_ind[i+1]]))
-    peak_nums = np.linspace(1, len(log_peak_ratios), len(log_peak_ratios))
-
-    A = np.vstack([peak_nums, np.ones(len(peak_nums))]).T
-    b = log_peak_ratios
-
-    m, c = np.linalg.lstsq(A, b, rcond=None)[0]
-    resid = np.linalg.lstsq(A, b, rcond=None)[1][0]
-    R2 = 1 - resid / (b.size * b.var())
-
-    damp = m/np.sqrt(m**2 + 4*np.pi**2)
-
-    return damp, R2, A, b, c, m
-
-
-def get_freq_from_signal(timestamps, values):
-    """Estimates the frequency of a time-domain signal by averaging the times between zero
-    crossings.
-
-    Parameters:
-        timestamps (numpy.ndarray): Time values corresponding to the signal.
-        values (numpy.ndarray): Signal values (real part considered for zero crossings).
-
-    Returns:
-        tuple:
-            - freq (float): Estimated signal frequency in Hz.
-            - R2 (float): Coefficient of determination (fit quality).
-            - A (numpy.ndarray): Design matrix used in the least squares regression.
-            - b (numpy.ndarray): Logarithmic peak ratios.
-            - c (float): Intercept from least squares fit.
-            - m (float): Slope from least squares fit.
-    """
-    zero_cross_idx = np.where(np.diff(np.sign(values.real)))[0]
-    crossing_nums = np.arange(len(zero_cross_idx))+1
-    time_intervals_doubled = 2*timestamps[zero_cross_idx]
-
-    A = np.vstack([time_intervals_doubled, np.ones(len(time_intervals_doubled))]).T
-    b = crossing_nums
-
-    m, c = np.linalg.lstsq(A, b, rcond=None)[0]
-    resid = np.linalg.lstsq(A, b, rcond=None)[1][0]
-    R2 = 1 - resid / (b.size * b.var())
-
-    freq = m
-
-    return freq, R2, A, b, c, m
 
 
 def get_mean_modeshape_efdd(segment_idxes, peak_idx, sing_vectors):
@@ -190,7 +121,7 @@ def get_mean_modeshape_efdd(segment_idxes, peak_idx, sing_vectors):
 
     mac_values = np.zeros(len(modeshapes))
     for idx in range(len(modeshapes)):
-        mac_values[idx] = mac.get_MAC(peak_modeshape, modeshapes[idx, :])
+        mac_values[idx] = mac.get_mac_value(peak_modeshape, modeshapes[idx, :])
 
     modeshape_efdd = np.sum((modeshapes.T * mac_values).T, axis=0) / np.sum(mac_values)
 
